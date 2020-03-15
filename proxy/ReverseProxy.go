@@ -28,8 +28,11 @@ func NewReverseProxyServere(config *models.Config, routes []models.Route) *Rever
 // InitHTTPServers inits http servers
 func (server *ReverseProxyServer) InitHTTPServers() {
 	for i, listenAddress := range server.Config.ListenAddresses {
+		serverConf := server.Config.Server
+
 		httpServer := http.Server{
-			Addr: listenAddress.GetAddress(),
+			Addr:           listenAddress.GetAddress(),
+			MaxHeaderBytes: int(serverConf.MaxHeaderSize.Bytes()),
 			// TODO add more config
 		}
 

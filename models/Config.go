@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/JojiiOfficial/ReverseProxy/models/units"
 	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,6 +15,12 @@ import (
 type Config struct {
 	ListenAddresses []ListenAddress
 	RouteFiles      []string
+	Server          ServerConfig `toml:"Server"`
+}
+
+// ServerConfig configuration for webserver
+type ServerConfig struct {
+	MaxHeaderSize units.Datasize
 }
 
 // ListenAddress config for ports

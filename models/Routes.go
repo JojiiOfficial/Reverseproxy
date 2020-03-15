@@ -200,11 +200,12 @@ func (route Route) HasAddress(address ListenAddress) bool {
 // FindMatchingLocation finds location
 func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 	for _, route := range routes {
+		// Match hostname
 		if !inStrSl(route.ServerNames, r.URL.Hostname()) {
 			continue
 		}
 
-		// Try to find matching route
+		// Find matching route
 		found := findMatchingLocation(r.URL.Path, route.Locations)
 		if found != nil {
 			return found

@@ -10,6 +10,7 @@ import (
 type RouteLocation struct {
 	Location    string
 	Destination string
+	Regex       bool
 
 	DestinationURL *url.URL `toml:"-"`
 }
@@ -67,14 +68,17 @@ func singleJoiningSlash(a, b string) string {
 func findMatchingLocation(reqPath string, locations []RouteLocation) *RouteLocation {
 	var matching []*RouteLocation
 
+	// Loop locations and search for matching prefixes
 	for i := range locations {
-		location := locations[i]
+		if locations[i].Regex {
+			// TODO implement regex location filter
+		}
 
-		if !strings.HasPrefix(location.Location, reqPath) {
+		if !strings.HasPrefix(locations[i].Location, reqPath) {
 			continue
 		}
 
-		matching = append(matching, &location)
+		matching = append(matching, &locations[i])
 	}
 
 	// If only one found, use it
@@ -82,6 +86,7 @@ func findMatchingLocation(reqPath string, locations []RouteLocation) *RouteLocat
 		return matching[0]
 	}
 
+	// Otherwise use exact path
 	if len(matching) > 1 {
 		for i := range matching {
 			if matching[i].Location == reqPath {

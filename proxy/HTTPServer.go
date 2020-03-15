@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/http/httputil"
 	"time"
@@ -29,7 +30,16 @@ func (httpServer *HTTPServer) initRouter() {
 }
 
 func (httpServer *HTTPServer) run() {
-	log.Fatalln(httpServer.Server.ListenAndServe())
+	if httpServer.SSL {
+		listener, err := tls.Listen("tcp", httpServer.Server.Addr, httpServer.Server.TLSConfig)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		log.Fatal(httpServer.Server.Serve(listener))
+	} else {
+		log.Fatalln(httpServer.Server.ListenAndServe())
+	}
 }
 
 // GetScheme returns scheme
