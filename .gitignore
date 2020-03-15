@@ -1,6 +1,7 @@
 main
 config
 data
+routes
 *.toml
 *.yaml
 *.yml

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
+	"github.com/JojiiOfficial/gaw"
 )
 
 //Config configuration file
@@ -29,11 +30,26 @@ func CreateDefaultConfig(file string) (bool, error) {
 		return false, nil
 	}
 
+	// Example route
+	exampleRoute := "routes/route1.toml"
+
 	// Create default config struct
 	config := Config{
 		RouteFiles: []string{
-			"routes/route1.toml",
+			exampleRoute,
 		},
+	}
+
+	// Create a route
+	err = CreateExampleRoute(exampleRoute)
+	if err != nil {
+		return false, err
+	}
+
+	// Create config-path if neccessary
+	err = gaw.CreatePath(file, 0740)
+	if err != nil {
+		return false, err
 	}
 
 	// Open file

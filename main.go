@@ -1,7 +1,7 @@
 package main
 
 import (
-	"ReverseProxy/models"
+	"github.com/JojiiOfficial/ReverseProxy/models"
 
 	log "github.com/sirupsen/logrus"
 )
