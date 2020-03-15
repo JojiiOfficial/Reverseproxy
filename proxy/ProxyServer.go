@@ -2,11 +2,12 @@ package proxy
 
 import (
 	"crypto/tls"
-	"log"
 	"net/http"
+	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 // ReverseProxyServer a reverseproxy server
@@ -27,9 +28,8 @@ func NewReverseProxyServere(config *models.Config, routes []models.Route) *Rever
 // InitHTTPServers inits http servers
 func (server *ReverseProxyServer) InitHTTPServers() {
 	for i, listenAddress := range server.Config.ListenAddresses {
-		httpServer := &http.Server{
-			Addr:      listenAddress.GetAddress(),
-			TLSConfig: &tls.Config{},
+		httpServer := http.Server{
+			Addr: listenAddress.GetAddress(),
 			// TODO add more config
 		}
 
@@ -59,7 +59,7 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		// Append server
 		server.Server = append(server.Server, HTTPServer{
 			SSL:    listenAddress.SSL,
-			Server: httpServer,
+			Server: &httpServer,
 			Routes: models.GetRoutesFromAddress(server.Routes, server.Config.ListenAddresses[i]),
 		})
 	}
@@ -67,8 +67,8 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 
 // Start starts the server
 func (server *ReverseProxyServer) Start() {
-	for _, httpServer := range server.Server {
-		httpServer.Start()
+	for i := range server.Server {
+		server.Server[i].Start()
 	}
 
 	// Wait for shutting down
@@ -78,6 +78,6 @@ func (server *ReverseProxyServer) Start() {
 // WaitForShutdown waiting for shutdown
 func (server *ReverseProxyServer) WaitForShutdown() {
 	for {
-		// magic
+		time.Sleep(10 * time.Hour)
 	}
 }

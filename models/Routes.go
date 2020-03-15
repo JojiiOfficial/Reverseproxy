@@ -3,6 +3,7 @@ package models
 import (
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 	"github.com/JojiiOfficial/gaw"
@@ -17,12 +18,6 @@ type Route struct {
 	ListenAddresses []*ListenAddress `toml:"-"`
 	SSL             TLSKeyCertPair
 	Locations       []RouteLocation
-}
-
-// RouteLocation location for route
-type RouteLocation struct {
-	Location    string
-	Destination string
 }
 
 // CreateExampleRoute creates an example route
@@ -82,6 +77,14 @@ func LoadRoute(file string) (*Route, error) {
 	// Set filename
 	route.FileName = gaw.FileFromPath(file)
 
+	// Init locations
+	for i := range route.Locations {
+		route.Locations[i].Init()
+	}
+
+	// Make servernames toLower
+	sliceToLower(route.ServerNames)
+
 	return &route, nil
 }
 
@@ -103,6 +106,14 @@ func (route Route) Check(config *Config) bool {
 		// Check key exists
 		if !gaw.FileExists(route.SSL.Key) {
 			log.Error("SSL key file not found")
+			return false
+		}
+	}
+
+	// Validate locations
+	for _, location := range route.Locations {
+		if !isURLValid(location.Destination) {
+			log.Fatalf("Location in %s is malformed!\n", route.FileName)
 			return false
 		}
 	}
@@ -182,7 +193,37 @@ func (route Route) HasAddress(address ListenAddress) bool {
 	return false
 }
 
-// Handle http handler function
-func (route *Route) Handle(w http.ResponseWriter, r *http.Request) {
+// FindMatchingLocation finds location
+func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
+	for _, route := range routes {
+		if !inStrSl(route.ServerNames, r.URL.Hostname()) {
+			continue
+		}
 
+		// Priority 1 -> look for perfect match
+		for _, location := range route.Locations {
+			if location.Location == r.URL.Path {
+				return &location
+			}
+		}
+
+		// Priority 2 -> use root
+		for _, location := range route.Locations {
+			if location.Location == "/" {
+				return &location
+			}
+		}
+	}
+
+	// Return nil if nothing was found
+	return nil
+}
+
+func inStrSl(ss []string, str string) bool {
+	for _, s := range ss {
+		if strings.ToLower(str) == strings.ToLower(s) {
+			return true
+		}
+	}
+	return false
 }
