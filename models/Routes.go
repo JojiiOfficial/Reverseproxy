@@ -10,6 +10,7 @@ import (
 // Route a reverseproxy route
 type Route struct {
 	ServerName string
+	Ports      []uint16
 	Locations  []RouteLocation
 }
 
@@ -29,7 +30,8 @@ func CreateExampleRoute(file string) error {
 
 	// Example route
 	r := Route{
-		ServerName: "test.de",
+		ServerName: "localhost",
+		Ports:      []uint16{80, 443},
 		Locations: []RouteLocation{
 			RouteLocation{
 				Location:    "/",
@@ -51,4 +53,21 @@ func CreateExampleRoute(file string) error {
 	}
 
 	return toml.NewEncoder(f).Encode(r)
+}
+
+// LoadRoute loads route
+func LoadRoute(file string) (*Route, error) {
+	var route Route
+
+	// Read file
+	if _, err := toml.DecodeFile(file, &route); err != nil {
+		return nil, err
+	}
+
+	return &route, nil
+}
+
+// Check checks a route for errors. Returns true on success
+func (route Route) Check() bool {
+	return true
 }

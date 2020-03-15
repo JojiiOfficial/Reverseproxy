@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/JojiiOfficial/ReverseProxy/models"
 
 	log "github.com/sirupsen/logrus"
@@ -18,27 +20,8 @@ var (
 )
 
 func main() {
-	// Create config if not exists
-	created, err := models.CreateDefaultConfig(DefaultConfigFile)
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	// Exit if config was created
-	if created {
-		log.Infof("Config %s created successfully", DefaultConfigFile)
-		return
-	}
-
-	// Read config
-	con, err := models.ReadConfig(DefaultConfigFile)
-	if err != nil {
-		log.Fatalln(err)
-		return
-	}
-
-	// Use config
-	config = con
+	// Init config
+	config = initConfig(DefaultConfigFile)
 
 	// Check route count
 	if len(config.RouteFiles) == 0 {
@@ -47,4 +30,37 @@ func main() {
 	}
 
 	log.Infof("Starting reverseproxy %s with %d routes", Version, len(config.RouteFiles))
+
+	// Loading routes
+	err := config.LoadRoutes()
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
+
+	log.Infof("Successfully loaded %d routes", len(config.Routes))
+}
+
+func initConfig(file string) *models.Config {
+	// Create config if not exists
+	created, err := models.CreateDefaultConfig(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Exit if config was created
+	if created {
+		log.Infof("Config %s created successfully", file)
+		os.Exit(0)
+		return nil
+	}
+
+	// Read config
+	con, err := models.ReadConfig(file)
+	if err != nil {
+		log.Fatalln(err)
+		return nil
+	}
+
+	return con
 }

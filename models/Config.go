@@ -7,12 +7,14 @@ import (
 	"github.com/JojiiOfficial/gaw"
 )
 
-//Config configuration file
+// Config configuration file
 type Config struct {
-	RouteFiles []string
+	ListenPorts []uint16
+	RouteFiles  []string
+	Routes      []Route `toml:"-"`
 }
 
-//ReadConfig read the config file
+// ReadConfig read the config file
 func ReadConfig(file string) (*Config, error) {
 	// Unmarshal config
 	var conf Config
@@ -23,7 +25,7 @@ func ReadConfig(file string) (*Config, error) {
 	return &conf, nil
 }
 
-//CreateDefaultConfig creates the default config file
+// CreateDefaultConfig creates the default config file
 func CreateDefaultConfig(file string) (bool, error) {
 	fStat, err := os.Stat(file)
 	if err == nil && fStat.Size() > 0 {
@@ -35,6 +37,10 @@ func CreateDefaultConfig(file string) (bool, error) {
 
 	// Create default config struct
 	config := Config{
+		ListenPorts: []uint16{
+			80,
+			443,
+		},
 		RouteFiles: []string{
 			exampleRoute,
 		},
@@ -60,4 +66,20 @@ func CreateDefaultConfig(file string) (bool, error) {
 
 	// Encode
 	return true, toml.NewEncoder(f).Encode(config)
+}
+
+// LoadRoutes loads the routes specified in config
+func (config *Config) LoadRoutes() error {
+	for _, sRoute := range config.RouteFiles {
+		// Load route
+		route, err := LoadRoute(sRoute)
+		if err != nil {
+			return err
+		}
+
+		// Append to existing routes
+		config.Routes = append(config.Routes, *route)
+	}
+
+	return nil
 }
