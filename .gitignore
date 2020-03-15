@@ -1,0 +1,7 @@
+main
+config
+data
+*.toml
+*.yaml
+*.yml
+*.json
