@@ -32,14 +32,22 @@ func (location RouteLocation) ModifyRequest(req *http.Request) {
 	targetQuery := target.RawQuery
 	req.URL.Scheme = target.Scheme
 	req.URL.Host = target.Host
-	req.URL.Path = singleJoiningSlash(target.Path, req.URL.Path)
+
+	// Only join file name if location.Location ends with a /
+	if strings.HasSuffix(target.Path, "/") {
+		req.URL.Path = singleJoiningSlash(target.Path, req.URL.Path)
+	} else {
+		req.URL.Path = target.Path
+	}
+
 	if targetQuery == "" || req.URL.RawQuery == "" {
 		req.URL.RawQuery = targetQuery + req.URL.RawQuery
 	} else {
 		req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 	}
+
+	// explicitly disable User-Agent so it's not set to default value
 	if _, ok := req.Header["User-Agent"]; !ok {
-		// explicitly disable User-Agent so it's not set to default value
 		req.Header.Set("User-Agent", "")
 	}
 }
@@ -54,4 +62,33 @@ func singleJoiningSlash(a, b string) string {
 		return a + "/" + b
 	}
 	return a + b
+}
+
+func findMatchingLocation(reqPath string, locations []RouteLocation) *RouteLocation {
+	var matching []*RouteLocation
+
+	for i := range locations {
+		location := locations[i]
+
+		if !strings.HasPrefix(location.Location, reqPath) {
+			continue
+		}
+
+		matching = append(matching, &location)
+	}
+
+	// If only one found, use it
+	if len(matching) == 1 {
+		return matching[0]
+	}
+
+	if len(matching) > 1 {
+		for i := range matching {
+			if matching[i].Location == reqPath {
+				return matching[i]
+			}
+		}
+	}
+
+	return nil
 }

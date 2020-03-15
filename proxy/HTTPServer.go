@@ -3,6 +3,7 @@ package proxy
 import (
 	"net/http"
 	"net/http/httputil"
+	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	log "github.com/sirupsen/logrus"
@@ -41,6 +42,7 @@ func (httpServer HTTPServer) GetScheme() string {
 
 // Director director
 func (httpServer *HTTPServer) Director(req *http.Request) {
+	start := time.Now()
 	req.URL.Scheme = httpServer.GetScheme()
 	req.URL.Host = req.Host
 
@@ -53,4 +55,6 @@ func (httpServer *HTTPServer) Director(req *http.Request) {
 
 	// Modifies the request
 	location.ModifyRequest(req)
+
+	log.Info("Forwarding took ", time.Since(start).String())
 }

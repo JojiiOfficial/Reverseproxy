@@ -17,7 +17,8 @@ type Route struct {
 	Addresses       []string         `toml:"Addresses"`
 	ListenAddresses []*ListenAddress `toml:"-"`
 	SSL             TLSKeyCertPair
-	Locations       []RouteLocation
+	Locations       []RouteLocation `toml:"Location"`
+	DefaultLocation *RouteLocation  `toml:"-"`
 }
 
 // CreateExampleRoute creates an example route
@@ -80,6 +81,9 @@ func LoadRoute(file string) (*Route, error) {
 	// Init locations
 	for i := range route.Locations {
 		route.Locations[i].Init()
+		if route.Locations[i].Location == "/" {
+			route.DefaultLocation = &route.Locations[i]
+		}
 	}
 
 	// Make servernames toLower
@@ -200,18 +204,15 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 			continue
 		}
 
-		// Priority 1 -> look for perfect match
-		for _, location := range route.Locations {
-			if location.Location == r.URL.Path {
-				return &location
-			}
+		// Try to find matching route
+		found := findMatchingLocation(r.URL.Path, route.Locations)
+		if found != nil {
+			return found
 		}
 
-		// Priority 2 -> use root
-		for _, location := range route.Locations {
-			if location.Location == "/" {
-				return &location
-			}
+		// Otherwise use default location
+		if route.DefaultLocation != nil {
+			return route.DefaultLocation
 		}
 	}
 
