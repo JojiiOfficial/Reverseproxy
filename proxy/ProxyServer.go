@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"crypto/tls"
@@ -8,12 +8,6 @@ import (
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/sirupsen/logrus"
 )
-
-// HTTPServer http server
-type HTTPServer struct {
-	SSL    bool
-	Server *http.Server
-}
 
 // ReverseProxyServer a reverseproxy server
 type ReverseProxyServer struct {
@@ -66,12 +60,16 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		server.Server = append(server.Server, HTTPServer{
 			SSL:    listenAddress.SSL,
 			Server: httpServer,
+			Routes: models.GetRoutesFromAddress(server.Routes, &server.Config.ListenAddresses[i]),
 		})
 	}
 }
 
 // Start starts the server
 func (server *ReverseProxyServer) Start() {
+	for _, httpServer := range server.Server {
+		httpServer.Start()
+	}
 
 	// Wait for shutting down
 	server.WaitForShutdown()

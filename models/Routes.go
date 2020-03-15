@@ -158,6 +158,30 @@ func GetTLSCerts(routes []Route, address *ListenAddress) []TLSKeyCertPair {
 	return pairs
 }
 
+// GetRoutesFromAddress gets all routes assigned to an address
+func GetRoutesFromAddress(routes []Route, address *ListenAddress) []*Route {
+	var retRoutes []*Route
+
+	for i := range routes {
+		if routes[i].HasAddress(address) {
+			retRoutes = append(retRoutes, &routes[i])
+		}
+	}
+
+	return retRoutes
+}
+
+// HasAddress return true if route has an address
+func (route Route) HasAddress(address *ListenAddress) bool {
+	for i := range route.Addresses {
+		if route.ListenAddresses[i] == address {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Handle http handler function
 func (route *Route) Handle(w http.ResponseWriter, r *http.Request) {
 

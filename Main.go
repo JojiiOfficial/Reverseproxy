@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/JojiiOfficial/ReverseProxy/models"
+	"github.com/JojiiOfficial/ReverseProxy/proxy"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,7 +32,7 @@ func main() {
 	log.Infof("Successfully loaded %d routes", len(routes))
 
 	// Create and start the reverseproxy server
-	server := NewReverseProxyServere(config, routes)
+	server := proxy.NewReverseProxyServere(config, routes)
 	server.InitHTTPServers()
 	server.Start()
 }
