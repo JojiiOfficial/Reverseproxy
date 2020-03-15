@@ -33,7 +33,7 @@ func CreateExampleRoute(file string) error {
 	r := Route{
 		FileName: gaw.FileFromPath(file),
 		ServerNames: []string{
-			"localhost",
+			"localhost.de",
 		},
 		Addresses: []string{
 			"127.0.0.1:80",

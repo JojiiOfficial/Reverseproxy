@@ -14,9 +14,9 @@ import (
 
 // Config configuration file
 type Config struct {
+	Server          ServerConfig `toml:"Server"`
 	ListenAddresses []ListenAddress
 	RouteFiles      []string
-	Server          ServerConfig `toml:"Server"`
 }
 
 // ServerConfig configuration for webserver

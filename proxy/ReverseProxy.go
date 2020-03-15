@@ -1,8 +1,12 @@
 package proxy
 
 import (
+	"context"
 	"crypto/tls"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
@@ -81,7 +85,22 @@ func (server *ReverseProxyServer) Start() {
 
 // WaitForShutdown waiting for shutdown
 func (server *ReverseProxyServer) WaitForShutdown() {
-	for {
-		time.Sleep(10 * time.Hour)
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, os.Interrupt, syscall.SIGKILL, syscall.SIGTERM)
+
+	// await os signal
+	<-signalChan
+
+	// Create a deadline for the await
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
+	defer cancel()
+
+	log.Info("Shutting down server")
+
+	for i := range server.Server {
+		server.Server[i].Server.Shutdown(ctx)
 	}
+
+	log.Info("Shutting down complete")
+	os.Exit(0)
 }
