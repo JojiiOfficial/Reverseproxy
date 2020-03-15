@@ -6,3 +6,4 @@ routes
 *.yaml
 *.yml
 *.json
+certs

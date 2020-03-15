@@ -1,17 +1,31 @@
 package models
 
 import (
+	"errors"
+	"fmt"
 	"os"
 
 	"github.com/BurntSushi/toml"
 	"github.com/JojiiOfficial/gaw"
+	log "github.com/sirupsen/logrus"
 )
 
 // Config configuration file
 type Config struct {
-	ListenPorts []uint16
-	RouteFiles  []string
-	Routes      []Route `toml:"-"`
+	ListenAddresses []ListenAddress
+	RouteFiles      []string
+}
+
+// ListenAddress config for ports
+type ListenAddress struct {
+	Address string
+	Port    uint16
+	SSL     bool
+}
+
+// GetAddress returns address of a listenAddress
+func (address ListenAddress) GetAddress() string {
+	return fmt.Sprintf("%s:%d", address.Address, address.Port)
 }
 
 // ReadConfig read the config file
@@ -37,9 +51,17 @@ func CreateDefaultConfig(file string) (bool, error) {
 
 	// Create default config struct
 	config := Config{
-		ListenPorts: []uint16{
-			80,
-			443,
+		ListenAddresses: []ListenAddress{
+			ListenAddress{
+				Address: "127.0.0.1",
+				Port:    80,
+				SSL:     false,
+			},
+			ListenAddress{
+				Address: "127.0.0.1",
+				Port:    443,
+				SSL:     true,
+			},
 		},
 		RouteFiles: []string{
 			exampleRoute,
@@ -68,18 +90,91 @@ func CreateDefaultConfig(file string) (bool, error) {
 	return true, toml.NewEncoder(f).Encode(config)
 }
 
+// InitConfig the config
+func InitConfig(file string) *Config {
+	// Create config if not exists
+	created, err := CreateDefaultConfig(file)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// Exit if config was created
+	if created {
+		log.Infof("Config %s created successfully", file)
+		os.Exit(0)
+		return nil
+	}
+
+	// Read config
+	con, err := ReadConfig(file)
+	if err != nil {
+		log.Fatalln(err)
+		return nil
+	}
+
+	return con
+}
+
 // LoadRoutes loads the routes specified in config
-func (config *Config) LoadRoutes() error {
+func (config *Config) LoadRoutes() ([]Route, error) {
+	var routes []Route
+
 	for _, sRoute := range config.RouteFiles {
 		// Load route
 		route, err := LoadRoute(sRoute)
 		if err != nil {
-			return err
+			return []Route{}, err
+		}
+
+		// Set route filename
+		route.FileName = gaw.FileFromPath(sRoute)
+
+		// Load addresses
+		if !route.LoadAddress(config) {
+			return []Route{}, ErrAddrNotFound
+		}
+
+		// Check route
+		if !route.Check(config) {
+			return []Route{}, errors.New("Config check failed")
 		}
 
 		// Append to existing routes
-		config.Routes = append(config.Routes, *route)
+		routes = append(routes, *route)
 	}
 
-	return nil
+	return routes, nil
+}
+
+// GetAddress gets address from config
+func (config Config) GetAddress(sAddress string) *ListenAddress {
+	for i, address := range config.ListenAddresses {
+		if address.GetAddress() == sAddress {
+			return &config.ListenAddresses[i]
+		}
+	}
+
+	return &ListenAddress{Port: 0}
+}
+
+// IsListeningOn return true if server is listening on port
+func (config Config) IsListeningOn(port uint16) bool {
+	for _, address := range config.ListenAddresses {
+		if address.Port == port {
+			return true
+		}
+	}
+
+	return false
+}
+
+// IsSSLPort return true if server listens on port using ssl
+func (config Config) IsSSLPort(port uint16) bool {
+	for _, address := range config.ListenAddresses {
+		if address.Port == port {
+			return address.SSL
+		}
+	}
+
+	return false
 }
