@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/JojiiOfficial/ReverseProxy/models/units"
@@ -21,6 +22,8 @@ type Config struct {
 // ServerConfig configuration for webserver
 type ServerConfig struct {
 	MaxHeaderSize units.Datasize
+	ReadTimeout   ConfigDuration
+	WriteTimeout  ConfigDuration
 }
 
 // ListenAddress config for ports
@@ -58,6 +61,11 @@ func CreateDefaultConfig(file string) (bool, error) {
 
 	// Create default config struct
 	config := Config{
+		Server: ServerConfig{
+			MaxHeaderSize: units.Kilobyte * 16,
+			ReadTimeout:   ConfigDuration(10 * time.Second),
+			WriteTimeout:  ConfigDuration(10 * time.Second),
+		},
 		ListenAddresses: []ListenAddress{
 			ListenAddress{
 				Address: "127.0.0.1",
@@ -95,6 +103,23 @@ func CreateDefaultConfig(file string) (bool, error) {
 
 	// Encode
 	return true, toml.NewEncoder(f).Encode(config)
+}
+
+// ConfigDuration duration for config
+type ConfigDuration time.Duration
+
+// UnmarshalText implements encoding.TextUnmarshaler
+func (d *ConfigDuration) UnmarshalText(data []byte) error {
+	duration, err := time.ParseDuration(string(data))
+	if err == nil {
+		*d = ConfigDuration(duration)
+	}
+	return err
+}
+
+// MarshalText implements encoding.TextMarshaler
+func (d ConfigDuration) MarshalText() ([]byte, error) {
+	return []byte(time.Duration(d).String()), nil
 }
 
 // InitConfig the config

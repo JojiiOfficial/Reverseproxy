@@ -33,7 +33,8 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		httpServer := http.Server{
 			Addr:           listenAddress.GetAddress(),
 			MaxHeaderBytes: int(serverConf.MaxHeaderSize.Bytes()),
-			// TODO add more config
+			ReadTimeout:    time.Duration(serverConf.ReadTimeout),
+			WriteTimeout:   time.Duration(serverConf.WriteTimeout),
 		}
 
 		// If address is ssl address, add tls config
