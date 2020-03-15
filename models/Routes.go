@@ -3,6 +3,7 @@ package models
 import (
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -119,6 +120,21 @@ func (route Route) Check(config *Config) bool {
 		if !isURLValid(location.Destination) {
 			log.Fatalf("Location in %s is malformed!\n", route.FileName)
 			return false
+		}
+
+		// Check for http request loops
+		for _, address := range config.ListenAddresses {
+			var p uint64
+			if len(location.DestinationURL.Port()) > 0 {
+				p, _ = strconv.ParseUint(location.DestinationURL.Port(), 10, 16)
+			} else {
+				p = 80
+			}
+
+			if location.DestinationURL.Hostname() == address.Address && p == uint64(address.Port) {
+				log.Fatal("Error Request loop detected")
+				return false
+			}
 		}
 	}
 

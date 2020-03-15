@@ -42,18 +42,9 @@ func (httpServer *HTTPServer) run() {
 	}
 }
 
-// GetScheme returns scheme
-func (httpServer HTTPServer) GetScheme() string {
-	if httpServer.SSL {
-		return "https"
-	}
-	return "http"
-}
-
 // Director director
 func (httpServer *HTTPServer) Director(req *http.Request) {
 	start := time.Now()
-	req.URL.Scheme = httpServer.GetScheme()
 	req.URL.Host = req.Host
 
 	location := models.FindMatchingLocation(httpServer.Routes, req)

@@ -20,12 +20,6 @@ func (location *RouteLocation) Init() {
 	location.DestinationURL, _ = url.Parse(location.Destination)
 }
 
-// GetDetinationURL gets url from location
-func (location RouteLocation) GetDetinationURL() *url.URL {
-	u, _ := url.Parse(location.Destination)
-	return u
-}
-
 // ModifyRequest modifies a request to a proxy forward request
 func (location RouteLocation) ModifyRequest(req *http.Request) {
 	target := location.DestinationURL
