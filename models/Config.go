@@ -163,7 +163,8 @@ func (config *Config) LoadRoutes() ([]Route, error) {
 
 		// Load addresses
 		if !route.LoadAddress(config) {
-			return []Route{}, ErrAddrNotFound
+			log.Warnf("At least one address used in '%s' was not found. This Route/Address might be unavailable", sRoute)
+			continue
 		}
 
 		// Check route

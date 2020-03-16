@@ -166,7 +166,6 @@ func (route *Route) LoadAddress(config *Config) bool {
 
 	// Set addresses
 	route.ListenAddresses = addresses
-
 	return true
 }
 

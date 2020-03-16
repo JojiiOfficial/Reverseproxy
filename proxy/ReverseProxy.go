@@ -45,7 +45,8 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		if listenAddress.SSL {
 			certKeyPairs := models.GetTLSCerts(server.Routes, &server.Config.ListenAddresses[i])
 			if len(certKeyPairs) == 0 {
-				logrus.Fatalln("Couldn't find correct certificate pairs!")
+				logrus.Warn("Couldn't find any certificate pairs for Address %s. This", listenAddress.Address)
+				continue
 			}
 
 			var tlsConfig tls.Config
