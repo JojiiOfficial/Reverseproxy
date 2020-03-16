@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/JojiiOfficial/ReverseProxy/proxy"
 	log "github.com/sirupsen/logrus"
@@ -10,12 +12,29 @@ const (
 	//Version version of reverseproxy
 	Version = "v0.1"
 	// DefaultConfigFile default config file
-	DefaultConfigFile = "./config/config.toml"
+	DefaultConfigFile = "/etc/reverseproxy/config.toml"
 )
 
+var (
+	configPath *string
+)
+
+func initFlags() {
+	configPath = flag.String("config", "", "Specify the configfil")
+	flag.Parse()
+}
+
 func main() {
+	initFlags()
+
+	// Determine configfile
+	configFile := DefaultConfigFile
+	if len(*configPath) > 0 {
+		configFile = *configPath
+	}
+
 	// Init config
-	config := models.InitConfig(DefaultConfigFile)
+	config := models.InitConfig(configFile)
 	// Check route count
 	if len(config.RouteFiles) == 0 {
 		log.Error("No route found!")
