@@ -28,6 +28,12 @@ func initFlags() {
 	configPath = flag.String("config", "", "Specify the configfile")
 	debug = flag.Bool("debug", false, "Debug")
 	flag.Parse()
+
+	*configPath = getEnvar("PROXY_CONFIG", *configPath)
+
+	if os.Getenv("PROXY_DEBUG") == "true" {
+		*debug = true
+	}
 }
 
 func main() {
@@ -43,7 +49,6 @@ func main() {
 	if len(*configPath) > 0 {
 		configFile = *configPath
 	}
-	configFile = getEnvar("PROXY_CONFIG", configFile)
 
 	// Init config
 	config := models.InitConfig(configFile, DefaultConfigPath)
