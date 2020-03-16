@@ -66,6 +66,10 @@ func main() {
 		return
 	}
 
+	if len(routes) == 0 {
+		log.Fatal("No route was found")
+	}
+
 	log.Infof("Successfully loaded %d routes", len(routes))
 
 	// Create and start the reverseproxy server

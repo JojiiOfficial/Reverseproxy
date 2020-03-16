@@ -29,7 +29,8 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 	}
 
 	// Get interface
-	rif := httpServer.GetInterfaceFromRoute(location.Route)
+
+	rif := httpServer.Config.GetAddress(httpServer.Server.Addr)
 	if rif == nil {
 		return nil, errors.New("Interface not found")
 	}
@@ -51,8 +52,7 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 		}
 	}
 
-	log.Info("Action took ", time.Since(start).String())
-
+	log.Debug("Action took ", time.Since(start).String())
 	return taskResponse, err
 }
 
@@ -76,9 +76,10 @@ func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.Rout
 }
 
 // Send redirect request
-func (httpServer *HTTPServer) redirectTask(req *http.Request, addressInterface *models.AddressInterface) *http.Response {
-	data := addressInterface.TaskData.Redirect
-	to := data.Location
+func (httpServer *HTTPServer) redirectTask(req *http.Request, listenAddress *models.ListenAddress) *http.Response {
+	body := listenAddress.TaskData.Redirect.GetBody()
+	req.URL.Scheme = "https"
+	to := req.URL.String()
 
 	if len(to) == 0 {
 		log.Fatalln("To redirect target specified for %s")
@@ -90,5 +91,5 @@ func (httpServer *HTTPServer) redirectTask(req *http.Request, addressInterface *
 	header.Set("Location", to)
 
 	// Build and return response
-	return buildResponse(req, http.StatusMovedPermanently, "301 Moved permanently", "301 Moved permanently", header)
+	return buildResponse(req, http.StatusMovedPermanently, body, "301 Moved permanently", header)
 }

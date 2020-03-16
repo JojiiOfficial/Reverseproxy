@@ -18,8 +18,8 @@ var RegexpStore = NewRegexStore()
 type Route struct {
 	FileName        string `toml:"-"`
 	ServerNames     []string
-	Interfaces      []AddressInterface `toml:"Interface"`
-	ListenAddresses []*ListenAddress   `toml:"-"`
+	Interfaces      []string
+	ListenAddresses []*ListenAddress `toml:"-"`
 	SSL             TLSKeyCertPair
 	Locations       []RouteLocation `toml:"Location"`
 	DefaultLocation *RouteLocation  `toml:"-"`
@@ -41,21 +41,9 @@ func CreateExampleRoute(file string) error {
 			"localhost",
 			"127.0.0.1",
 		},
-		Interfaces: []AddressInterface{
-			AddressInterface{
-				Address: "127.0.0.1:80",
-				Task:    "httpredirect",
-				TaskData: TaskData{
-					Redirect: RedirectData{
-						Location: "https://127.0.0.1:443",
-						Body:     "Moved permanently",
-						HTTPCode: 301,
-					},
-				},
-			},
-			AddressInterface{
-				Address: "127.0.0.1:443",
-			},
+		Interfaces: []string{
+			"127.0.0.1:80",
+			"127.0.0.1:443",
 		},
 		Locations: []RouteLocation{
 			RouteLocation{
@@ -173,12 +161,12 @@ func (route Route) NeedSSL() bool {
 func (route *Route) LoadAddress(config *Config) bool {
 	var addresses []*ListenAddress
 	for _, iface := range route.Interfaces {
-		address := config.GetAddress(iface.Address)
+		address := config.GetAddress(iface)
 		if address.Address == "" {
 			return false
 		}
 
-		addresses = append(addresses, config.GetAddress(iface.Address))
+		addresses = append(addresses, config.GetAddress(iface))
 	}
 
 	// Set addresses
@@ -221,7 +209,7 @@ func GetRoutesFromAddress(routes []Route, address ListenAddress) []*Route {
 // HasAddress return true if route has an address
 func (route Route) HasAddress(address ListenAddress) bool {
 	for i := range route.Interfaces {
-		if route.Interfaces[i].Address == address.GetAddress() {
+		if route.Interfaces[i] == address.GetAddress() {
 			return true
 		}
 	}

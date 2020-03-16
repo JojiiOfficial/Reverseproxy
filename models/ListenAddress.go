@@ -1,10 +1,17 @@
 package models
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
-// AddressInterface an interface for address
-type AddressInterface struct {
+// ListenAddress describes the address to listen on. For each Address a specific httpServer is started.
+// It must be specified in a config file before it can be used
+
+// ListenAddress config for ports
+type ListenAddress struct {
 	Address  string
+	SSL      bool
 	Task     InterfaceTask
 	TaskData TaskData
 }
@@ -12,6 +19,12 @@ type AddressInterface struct {
 // TaskData data for interface Task
 type TaskData struct {
 	Redirect RedirectData
+}
+
+// RedirectData data for interface Task to redirect
+type RedirectData struct {
+	Body     string
+	HTTPCode int
 }
 
 // InterfaceTask task for an Address interface
@@ -24,20 +37,13 @@ const (
 )
 
 // GetTask gets task from AddressInterface. If not set, return Default task
-func (aif *AddressInterface) GetTask() InterfaceTask {
+func (address *ListenAddress) GetTask() InterfaceTask {
 	// Return default task if not set
-	if string(aif.Task) == "" {
+	if string(address.Task) == "" {
 		return ProxyTask
 	}
 
-	return aif.Task
-}
-
-// RedirectData data for interface Task to redirect
-type RedirectData struct {
-	Location string
-	Body     string
-	HTTPCode int
+	return address.Task
 }
 
 // GetBody returns body. If empty return default body
@@ -54,4 +60,14 @@ func (redirectData RedirectData) GetHTTPCode() int {
 		return http.StatusMovedPermanently
 	}
 	return redirectData.HTTPCode
+}
+
+// GetAddress returns address of a listenAddress
+func (address ListenAddress) GetAddress() string {
+	return address.Address
+}
+
+// GetPort returns port of address
+func (address ListenAddress) GetPort() string {
+	return strings.Split(address.Address, ":")[1]
 }

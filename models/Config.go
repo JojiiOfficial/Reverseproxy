@@ -4,7 +4,6 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -25,22 +24,6 @@ type ServerConfig struct {
 	MaxHeaderSize units.Datasize
 	ReadTimeout   ConfigDuration
 	WriteTimeout  ConfigDuration
-}
-
-// ListenAddress config for ports
-type ListenAddress struct {
-	Address string
-	SSL     bool
-}
-
-// GetAddress returns address of a listenAddress
-func (address ListenAddress) GetAddress() string {
-	return address.Address
-}
-
-// GetPort returns port of address
-func (address ListenAddress) GetPort() string {
-	return strings.Split(address.Address, ":")[1]
 }
 
 // ReadConfig read the config file
@@ -75,6 +58,12 @@ func CreateDefaultConfig(file, defaultPath string) (bool, error) {
 			ListenAddress{
 				Address: "127.0.0.1:80",
 				SSL:     false,
+				Task:    HTTPRedirectTask,
+				TaskData: TaskData{
+					Redirect: RedirectData{
+						HTTPCode: 301,
+					},
+				},
 			},
 			ListenAddress{
 				Address: "127.0.0.1:443",

@@ -15,6 +15,7 @@ type HTTPServer struct {
 	Debug  bool
 	Routes []*models.Route
 	Server *http.Server
+	Config *models.Config
 }
 
 // Start starts the server
@@ -56,14 +57,4 @@ func (httpServer *HTTPServer) run() {
 		// Start the http server
 		log.Fatalln(httpServer.Server.ListenAndServe())
 	}
-}
-
-// GetInterfaceFromRoute returns AddressInterface
-func (httpServer HTTPServer) GetInterfaceFromRoute(r *models.Route) *models.AddressInterface {
-	for _, rif := range r.Interfaces {
-		if rif.Address == httpServer.Server.Addr {
-			return &rif
-		}
-	}
-	return nil
 }

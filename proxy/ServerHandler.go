@@ -32,6 +32,8 @@ func NewReverseProxyServere(config *models.Config, routes []models.Route) *Rever
 
 // InitHTTPServers inits http servers
 func (server *ReverseProxyServer) InitHTTPServers() {
+	var foundRoutes int
+
 	for i, listenAddress := range server.Config.ListenAddresses {
 		serverConf := server.Config.Server
 
@@ -46,7 +48,7 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		if listenAddress.SSL {
 			certKeyPairs := models.GetTLSCerts(server.Routes, &server.Config.ListenAddresses[i])
 			if len(certKeyPairs) == 0 {
-				logrus.Warn("Couldn't find any certificate pairs for Address %s. This", listenAddress.Address)
+				logrus.Warnf("Couldn't find any certificate pairs for Address '%s'. This Route/Server might be unavailable", listenAddress.Address)
 				continue
 			}
 
@@ -71,12 +73,21 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		}
 
 		// Append server
+		routes := models.GetRoutesFromAddress(server.Routes, server.Config.ListenAddresses[i])
 		server.Server = append(server.Server, HTTPServer{
 			SSL:    listenAddress.SSL,
 			Server: &httpServer,
-			Routes: models.GetRoutesFromAddress(server.Routes, server.Config.ListenAddresses[i]),
+			Routes: routes,
 			Debug:  server.Debug,
+			Config: server.Config,
 		})
+
+		foundRoutes += len(routes)
+	}
+
+	// Exit if no route was found
+	if foundRoutes == 0 {
+		log.Fatal("No route found")
 	}
 }
 
