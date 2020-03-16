@@ -38,6 +38,8 @@ func CreateExampleRoute(file string) error {
 		FileName: gaw.FileFromPath(file),
 		ServerNames: []string{
 			"localhost.de",
+			"localhost",
+			"127.0.0.1",
 		},
 		Interfaces: []AddressInterface{
 			AddressInterface{
@@ -63,6 +65,11 @@ func CreateExampleRoute(file string) error {
 			RouteLocation{
 				Location:    "/subroute",
 				Destination: "http://127.0.0.1/lol.html",
+				Allow: []string{
+					"127.0.0.1",
+					"1.1.1.1",
+				},
+				Deny: "all",
 			},
 		},
 	}

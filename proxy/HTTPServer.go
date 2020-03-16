@@ -30,8 +30,10 @@ func (httpServer *HTTPServer) initRouter() {
 	}
 }
 
+// Start the server
 func (httpServer *HTTPServer) run() {
 	if httpServer.SSL {
+		// Create TLS Listener for ... tls
 		listener, err := tls.Listen("tcp", httpServer.Server.Addr, httpServer.Server.TLSConfig)
 		if err != nil {
 			log.Fatal(err)
@@ -39,6 +41,7 @@ func (httpServer *HTTPServer) run() {
 
 		log.Fatal(httpServer.Server.Serve(listener))
 	} else {
+		// Start a simple http server
 		log.Fatalln(httpServer.Server.ListenAndServe())
 	}
 }

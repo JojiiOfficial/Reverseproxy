@@ -8,12 +8,18 @@ import (
 
 // RouteLocation location for route
 type RouteLocation struct {
-	Route       *Route `toml:"-"`
+	// Toml config attributes
 	Location    string
 	Destination string
 	Regex       bool
 
+	// Allow/deny hosts
+	Allow []string
+	Deny  string
+
+	// Non toml attrs
 	DestinationURL *url.URL `toml:"-"`
+	Route          *Route   `toml:"-"`
 }
 
 // Init inits a location

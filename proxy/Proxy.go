@@ -1,13 +1,13 @@
 package proxy
 
 import (
-	"bytes"
 	"errors"
-	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
+	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -17,49 +17,65 @@ func (httpServer *HTTPServer) Director(req *http.Request) {}
 // RoundTrip trips stuff around
 func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, error) {
 	start := time.Now()
+
+	// Set host of new request
 	req.URL.Host = req.Host
 
+	// Find matching location
 	location := models.FindMatchingLocation(httpServer.Routes, req)
 	if location == nil {
 		log.Warnf("No matching route found for %s", req.URL.String())
-		req.URL = nil
 		return nil, errors.New("Route not found")
 	}
 
+	// Get interface
 	rif := httpServer.GetInterfaceFromRoute(location.Route)
 	if rif == nil {
-		log.Error("Couldn't find interface!")
-		req.URL = nil
 		return nil, errors.New("Interface not found")
 	}
 
+	var err error
+	taskResponse := &http.Response{}
+
+	// Do specified task
 	switch rif.GetTask() {
 	case models.ProxyTask:
 		{
-			httpServer.proxyTask(req, location)
+			// Forward request
+			taskResponse, err = httpServer.proxyTask(req, location)
 		}
 	case models.HTTPRedirectTask:
 		{
-			return httpServer.redirectTask(req, rif), nil
+			// Send redirect
+			taskResponse, err = httpServer.redirectTask(req, rif), nil
 		}
 	}
 
 	log.Info("Action took ", time.Since(start).String())
 
-	return http.DefaultTransport.RoundTrip(req)
+	return taskResponse, err
 }
 
 // --- Tasks
 
-func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) {
+// Proxy a request
+func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) (*http.Response, error) {
+	// Handle access control
+	if location.Deny == "all" {
+		ip := strings.Split(req.RemoteAddr, ":")[0]
+		if !gaw.IsInStringArray(ip, location.Allow) {
+			return getForbiddenResponse(req), nil
+		}
+	}
+
 	// Modifies the request
 	location.ModifyProxyRequest(req)
 
-	if httpServer.Debug {
-		log.Info("Forwarding to ", req.URL.String())
-	}
+	// Call default roundTrip to forward the request
+	return http.DefaultTransport.RoundTrip(req)
 }
 
+// Send redirect request
 func (httpServer *HTTPServer) redirectTask(req *http.Request, addressInterface *models.AddressInterface) *http.Response {
 	data := addressInterface.TaskData.Redirect
 	to := data.Location
@@ -69,19 +85,10 @@ func (httpServer *HTTPServer) redirectTask(req *http.Request, addressInterface *
 		return nil
 	}
 
+	// Build header
 	header := make(http.Header)
 	header.Set("Location", to)
 
-	t := &http.Response{
-		Status:        "301 Redirect",
-		StatusCode:    data.GetHTTPCode(),
-		Proto:         "HTTP/1.1",
-		ProtoMajor:    1,
-		ProtoMinor:    1,
-		Body:          ioutil.NopCloser(bytes.NewBufferString(data.GetBody())),
-		ContentLength: int64(len(data.GetBody())),
-		Request:       req,
-		Header:        header,
-	}
-	return t
+	// Build and return response
+	return buildResponse(req, http.StatusMovedPermanently, "301 Moved permanently", "301 Moved permanently", header)
 }
