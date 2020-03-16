@@ -52,6 +52,8 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 
 			var tlsConfig tls.Config
 			for _, pair := range certKeyPairs {
+				log.Debug("Found cert: ", pair.Cert, " Key: ", pair.Key)
+
 				// Load cert
 				cert, err := pair.GetCertificate()
 				if err != nil {

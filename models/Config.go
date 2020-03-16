@@ -2,9 +2,9 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -30,13 +30,17 @@ type ServerConfig struct {
 // ListenAddress config for ports
 type ListenAddress struct {
 	Address string
-	Port    uint16
 	SSL     bool
 }
 
 // GetAddress returns address of a listenAddress
 func (address ListenAddress) GetAddress() string {
-	return fmt.Sprintf("%s:%d", address.Address, address.Port)
+	return address.Address
+}
+
+// GetPort returns port of address
+func (address ListenAddress) GetPort() string {
+	return strings.Split(address.Address, ":")[1]
 }
 
 // ReadConfig read the config file
@@ -69,13 +73,11 @@ func CreateDefaultConfig(file, defaultPath string) (bool, error) {
 		},
 		ListenAddresses: []ListenAddress{
 			ListenAddress{
-				Address: "127.0.0.1",
-				Port:    80,
+				Address: "127.0.0.1:80",
 				SSL:     false,
 			},
 			ListenAddress{
-				Address: "127.0.0.1",
-				Port:    443,
+				Address: "127.0.0.1:443",
 				SSL:     true,
 			},
 		},
@@ -188,27 +190,5 @@ func (config Config) GetAddress(sAddress string) *ListenAddress {
 		}
 	}
 
-	return &ListenAddress{Port: 0}
-}
-
-// IsListeningOn return true if server is listening on port
-func (config Config) IsListeningOn(port uint16) bool {
-	for _, address := range config.ListenAddresses {
-		if address.Port == port {
-			return true
-		}
-	}
-
-	return false
-}
-
-// IsSSLPort return true if server listens on port using ssl
-func (config Config) IsSSLPort(port uint16) bool {
-	for _, address := range config.ListenAddresses {
-		if address.Port == port {
-			return address.SSL
-		}
-	}
-
-	return false
+	return &ListenAddress{Address: ""}
 }

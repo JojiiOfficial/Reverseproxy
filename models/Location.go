@@ -23,8 +23,18 @@ type RouteLocation struct {
 }
 
 // Init inits a location
-func (location *RouteLocation) Init() {
+func (location *RouteLocation) Init(route *Route) {
+	location.Route = route
 	location.DestinationURL, _ = url.Parse(location.Destination)
+}
+
+//Ports returns a list with ports used by the given RouteLocation
+func (location *RouteLocation) Ports() []string {
+	var ports []string
+	for _, address := range location.Route.ListenAddresses {
+		ports = append(ports, address.GetPort())
+	}
+	return ports
 }
 
 // ModifyProxyRequest modifies a request to a proxy forward request
