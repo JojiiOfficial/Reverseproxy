@@ -50,7 +50,7 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 				continue
 			}
 
-			var tlsConfig tls.Config
+			tlsConfig := &tls.Config{}
 			for _, pair := range certKeyPairs {
 				log.Debug("Found cert: ", pair.Cert, " Key: ", pair.Key)
 
@@ -64,8 +64,10 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 				tlsConfig.Certificates = append(tlsConfig.Certificates, cert)
 			}
 
+			tlsConfig.BuildNameToCertificate()
+
 			// Set tls config
-			httpServer.TLSConfig = &tlsConfig
+			httpServer.TLSConfig = tlsConfig
 		}
 
 		// Append server
