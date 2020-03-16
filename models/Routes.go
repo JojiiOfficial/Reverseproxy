@@ -18,8 +18,8 @@ var RegexpStore = NewRegexStore()
 type Route struct {
 	FileName        string `toml:"-"`
 	ServerNames     []string
-	Addresses       []string         `toml:"Addresses"`
-	ListenAddresses []*ListenAddress `toml:"-"`
+	Interfaces      []AddressInterface `toml:"Interface"`
+	ListenAddresses []*ListenAddress   `toml:"-"`
 	SSL             TLSKeyCertPair
 	Locations       []RouteLocation `toml:"Location"`
 	DefaultLocation *RouteLocation  `toml:"-"`
@@ -39,9 +39,14 @@ func CreateExampleRoute(file string) error {
 		ServerNames: []string{
 			"localhost.de",
 		},
-		Addresses: []string{
-			"127.0.0.1:80",
-			"127.0.0.1:443",
+		Interfaces: []AddressInterface{
+			AddressInterface{
+				Address: "127.0.0.1:80",
+				Task:    "httpredirect",
+			},
+			AddressInterface{
+				Address: "127.0.0.1:443",
+			},
 		},
 		Locations: []RouteLocation{
 			RouteLocation{
@@ -158,13 +163,13 @@ func (route Route) NeedSSL() bool {
 // LoadAddress loads an address from config. Returns false if at least one address was not found
 func (route *Route) LoadAddress(config *Config) bool {
 	var addresses []*ListenAddress
-	for _, add := range route.Addresses {
-		address := config.GetAddress(add)
+	for _, iface := range route.Interfaces {
+		address := config.GetAddress(iface.Address)
 		if address.Port == 0 {
 			return false
 		}
 
-		addresses = append(addresses, config.GetAddress(add))
+		addresses = append(addresses, config.GetAddress(iface.Address))
 	}
 
 	// Set addresses
@@ -206,8 +211,8 @@ func GetRoutesFromAddress(routes []Route, address ListenAddress) []*Route {
 
 // HasAddress return true if route has an address
 func (route Route) HasAddress(address ListenAddress) bool {
-	for i := range route.Addresses {
-		if *route.ListenAddresses[i] == address {
+	for i := range route.Interfaces {
+		if route.Interfaces[i].Address == address.GetAddress() {
 			return true
 		}
 	}
@@ -230,6 +235,7 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 		log.Debug(r.URL.Path, " -> ", found.Location)
 
 		if found != nil {
+			found.Route = route
 			return found
 		}
 

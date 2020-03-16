@@ -8,6 +8,7 @@ import (
 
 // RouteLocation location for route
 type RouteLocation struct {
+	Route       *Route `toml:"-"`
 	Location    string
 	Destination string
 	Regex       bool
@@ -20,8 +21,8 @@ func (location *RouteLocation) Init() {
 	location.DestinationURL, _ = url.Parse(location.Destination)
 }
 
-// ModifyRequest modifies a request to a proxy forward request
-func (location RouteLocation) ModifyRequest(req *http.Request) {
+// ModifyProxyRequest modifies a request to a proxy forward request
+func (location RouteLocation) ModifyProxyRequest(req *http.Request) {
 	target := location.DestinationURL
 
 	targetQuery := target.RawQuery
@@ -41,6 +42,16 @@ func (location RouteLocation) ModifyRequest(req *http.Request) {
 		req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 	}
 
+	location.finalMods(req)
+}
+
+// ModifyRedirectRequest modifies a request to redirect
+func (location *RouteLocation) ModifyRedirectRequest(req *http.Request) {
+
+	location.finalMods(req)
+}
+
+func (location *RouteLocation) finalMods(req *http.Request) {
 	// explicitly disable User-Agent so it's not set to default value
 	if _, ok := req.Header["User-Agent"]; !ok {
 		req.Header.Set("User-Agent", "")

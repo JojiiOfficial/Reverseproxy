@@ -43,7 +43,17 @@ func (httpServer *HTTPServer) run() {
 	}
 }
 
-// Director director
+// GetInterfaceFromRoute returns AddressInterface
+func (httpServer HTTPServer) GetInterfaceFromRoute(r *models.Route) *models.AddressInterface {
+	for _, rif := range r.Interfaces {
+		if rif.Address == httpServer.Server.Addr {
+			return &rif
+		}
+	}
+	return nil
+}
+
+// Director directs
 func (httpServer *HTTPServer) Director(req *http.Request) {
 	start := time.Now()
 	req.URL.Host = req.Host
@@ -55,12 +65,37 @@ func (httpServer *HTTPServer) Director(req *http.Request) {
 		return
 	}
 
+	rif := httpServer.GetInterfaceFromRoute(location.Route)
+	if rif == nil {
+		log.Error("Couldn't find interface!")
+		req.URL = nil
+		return
+	}
+
+	switch rif.GetTask() {
+	case models.ProxyTask:
+		httpServer.proxyTask(req, location)
+	case models.HTTPRedirectTask:
+		httpServer.redirectTask(req, location)
+	}
+
+	log.Info("Action took ", time.Since(start).String())
+}
+
+func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) {
 	// Modifies the request
-	location.ModifyRequest(req)
+	location.ModifyProxyRequest(req)
 
 	if httpServer.Debug {
 		log.Info("Forwarding to ", req.URL.String())
 	}
+}
 
-	log.Info("Forwarding took ", time.Since(start).String())
+func (httpServer *HTTPServer) redirectTask(req *http.Request, location *models.RouteLocation) {
+	// Modifies the request
+	location.ModifyRedirectRequest(req)
+
+	if httpServer.Debug {
+		log.Info("Redirecting")
+	}
 }
