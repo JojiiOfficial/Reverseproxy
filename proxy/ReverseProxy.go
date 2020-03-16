@@ -71,6 +71,7 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 			SSL:    listenAddress.SSL,
 			Server: &httpServer,
 			Routes: models.GetRoutesFromAddress(server.Routes, server.Config.ListenAddresses[i]),
+			Debug:  server.Debug,
 		})
 	}
 }

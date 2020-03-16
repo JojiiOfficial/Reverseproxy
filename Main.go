@@ -5,6 +5,7 @@ import (
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/JojiiOfficial/ReverseProxy/proxy"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -30,6 +31,11 @@ func initFlags() {
 
 func main() {
 	initFlags()
+
+	if *debug {
+		logrus.SetLevel(logrus.DebugLevel)
+		logrus.Debug("Debugmodus: on")
+	}
 
 	// Determine configfile
 	configFile := DefaultConfigFile
