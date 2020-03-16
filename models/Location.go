@@ -48,6 +48,9 @@ func (location RouteLocation) ModifyRequest(req *http.Request) {
 }
 
 func singleJoiningSlash(a, b string) string {
+	if strings.HasPrefix(b, a) {
+		b = b[len(a)-1:]
+	}
 	aslash := strings.HasSuffix(a, "/")
 	bslash := strings.HasPrefix(b, "/")
 	switch {
@@ -59,35 +62,38 @@ func singleJoiningSlash(a, b string) string {
 	return a + b
 }
 
-func findMatchingLocation(reqPath string, locations []RouteLocation) *RouteLocation {
-	var matching []*RouteLocation
+func findMatchingLocation(path string, locations []RouteLocation) *RouteLocation {
+	pathItems := trunSlice(strings.Split(path, "/"))
 
-	// Loop locations and search for matching prefixes
 	for i := range locations {
-		if locations[i].Regex {
-			// TODO implement regex location filter
-		}
+		locationItems := trunSlice(strings.Split(locations[i].Location, "/"))
 
-		if !strings.HasPrefix(locations[i].Location, reqPath) {
-			continue
-		}
-
-		matching = append(matching, &locations[i])
-	}
-
-	// If only one found, use it
-	if len(matching) == 1 {
-		return matching[0]
-	}
-
-	// Otherwise use exact path
-	if len(matching) > 1 {
-		for i := range matching {
-			if matching[i].Location == reqPath {
-				return matching[i]
-			}
+		// Calc match depth and compare to required depth. If >=, add to matching items
+		if calcMatchDepht(pathItems, locationItems) >= len(locationItems) {
+			return &locations[i]
 		}
 	}
-
 	return nil
+}
+
+func calcMatchDepht(path, location []string) int {
+	matchCount := 0
+	for i := range location {
+		if location[i] != path[i] {
+			return matchCount
+		}
+		matchCount++
+	}
+	return matchCount
+}
+
+func trunSlice(sl []string) []string {
+	j := 0
+	for i := range sl {
+		if sl[i] != "" {
+			sl[j] = sl[i]
+			j++
+		}
+	}
+	return sl[:j]
 }

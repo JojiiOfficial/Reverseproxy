@@ -222,6 +222,7 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 
 		// Find matching route
 		found := findMatchingLocation(r.URL.Path, route.Locations)
+		log.Debug(r.URL.Path, " -> ", found.Location)
 		if found != nil {
 			return found
 		}

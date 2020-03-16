@@ -34,7 +34,7 @@ func main() {
 
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
-		logrus.Debug("Debugmodus: on")
+		logrus.Debug("Debugmode: on")
 	}
 
 	// Determine configfile

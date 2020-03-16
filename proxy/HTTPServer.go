@@ -59,7 +59,7 @@ func (httpServer *HTTPServer) Director(req *http.Request) {
 	location.ModifyRequest(req)
 
 	if httpServer.Debug {
-		log.Info("Forwarding to", req.URL.String())
+		log.Info("Forwarding to ", req.URL.String())
 	}
 
 	log.Info("Forwarding took ", time.Since(start).String())
