@@ -11,8 +11,10 @@ import (
 const (
 	//Version version of reverseproxy
 	Version = "v0.1"
+	// DefaultConfigPath default config path
+	DefaultConfigPath = "/etc/reverseproxy/"
 	// DefaultConfigFile default config file
-	DefaultConfigFile = "/etc/reverseproxy/config.toml"
+	DefaultConfigFile = DefaultConfigPath + "config.toml"
 )
 
 var (
@@ -34,7 +36,7 @@ func main() {
 	}
 
 	// Init config
-	config := models.InitConfig(configFile)
+	config := models.InitConfig(configFile, DefaultConfigPath)
 	// Check route count
 	if len(config.RouteFiles) == 0 {
 		log.Error("No route found!")

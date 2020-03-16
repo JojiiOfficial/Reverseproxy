@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -50,14 +51,14 @@ func ReadConfig(file string) (*Config, error) {
 }
 
 // CreateDefaultConfig creates the default config file
-func CreateDefaultConfig(file string) (bool, error) {
+func CreateDefaultConfig(file, defaultPath string) (bool, error) {
 	fStat, err := os.Stat(file)
 	if err == nil && fStat.Size() > 0 {
 		return false, nil
 	}
 
 	// Example route
-	exampleRoute := "routes/route1.toml"
+	exampleRoute := filepath.Join(defaultPath, "routes/route1.toml")
 
 	// Create default config struct
 	config := Config{
@@ -123,9 +124,9 @@ func (d ConfigDuration) MarshalText() ([]byte, error) {
 }
 
 // InitConfig the config
-func InitConfig(file string) *Config {
+func InitConfig(file, defaultPath string) *Config {
 	// Create config if not exists
-	created, err := CreateDefaultConfig(file)
+	created, err := CreateDefaultConfig(file, defaultPath)
 	if err != nil {
 		log.Fatalln(err)
 	}
