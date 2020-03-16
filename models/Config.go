@@ -58,7 +58,7 @@ func CreateDefaultConfig(file, defaultPath string) (bool, error) {
 	}
 
 	// Example route
-	exampleRoute := filepath.Join(defaultPath, "routes/route1.toml")
+	exampleRoute := filepath.Join(gaw.PathFromFilepath(file), "routes/route1.toml")
 
 	// Create default config struct
 	config := Config{

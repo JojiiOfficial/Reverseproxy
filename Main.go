@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/JojiiOfficial/ReverseProxy/proxy"
@@ -42,9 +43,11 @@ func main() {
 	if len(*configPath) > 0 {
 		configFile = *configPath
 	}
+	configFile = getEnvar("PROXY_CONFIG", configFile)
 
 	// Init config
 	config := models.InitConfig(configFile, DefaultConfigPath)
+
 	// Check route count
 	if len(config.RouteFiles) == 0 {
 		log.Error("No route found!")
@@ -66,4 +69,12 @@ func main() {
 	server.InitHTTPServers()
 	server.Start()
 
+}
+
+func getEnvar(key, fallbackValue string) string {
+	va, ok := os.LookupEnv(key)
+	if ok {
+		return va
+	}
+	return fallbackValue
 }
