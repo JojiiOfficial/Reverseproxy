@@ -11,6 +11,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+//RegexpStore store regexes
+var RegexpStore = NewRegexStore()
+
 // Route a reverseproxy route
 type Route struct {
 	FileName        string `toml:"-"`
@@ -224,6 +227,8 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 
 		// Find matching route
 		found := findMatchingLocation(pathItems, route.Locations)
+		log.Debug(r.URL.Path, " -> ", found.Location)
+
 		if found != nil {
 			return found
 		}

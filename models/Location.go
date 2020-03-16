@@ -66,7 +66,7 @@ func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteL
 	for index := range locations {
 		locationItems := trunSlice(strings.Split(locations[index].Location, "/"))
 		// Calc match depth and compare to required depth. If >=, add to matching items
-		if calcMatchDepht(pathItems, locationItems) >= len(locationItems) {
+		if calcMatchDepth(pathItems, locationItems, locations[index].Regex) >= len(locationItems) {
 			return &locations[index]
 		}
 	}
@@ -74,20 +74,36 @@ func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteL
 	return nil
 }
 
-func calcMatchDepht(path, location []string) int {
+func calcMatchDepth(path, location []string, regex bool) int {
 	matchCount := 0
 	for i := range location {
 		if len(location) <= i || len(path) <= i {
 			break
 		}
 
-		if location[i] != path[i] {
-			return matchCount
+		if !regex || !isRegexString(location[i]) {
+			if location[i] != path[i] {
+				return matchCount
+			}
+		} else if regex && isRegexString(location[i]) {
+			r := RegexpStore.GetPattern(location[i][1 : len(location[i])-1])
+			if r == nil {
+				return 0
+			}
+
+			if !r.MatchString(path[i]) {
+				return matchCount
+			}
 		}
+
 		matchCount++
 	}
 
 	return matchCount
+}
+
+func isRegexString(str string) bool {
+	return strings.HasSuffix(str, "}") && strings.HasPrefix(str, "{")
 }
 
 func trunSlice(sl []string) []string {
