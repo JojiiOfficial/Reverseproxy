@@ -79,7 +79,7 @@ func findMatchingLocation(path string, locations []RouteLocation) *RouteLocation
 func calcMatchDepht(path, location []string) int {
 	matchCount := 0
 	for i := range location {
-		if len(location) < i || len(path) < i {
+		if len(location) <= i || len(path) <= i {
 			break
 		}
 
