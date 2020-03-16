@@ -214,6 +214,8 @@ func (route Route) HasAddress(address ListenAddress) bool {
 
 // FindMatchingLocation finds location
 func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
+	pathItems := trunSlice(strings.Split(r.URL.Path, "/"))
+
 	for _, route := range routes {
 		// Match hostname
 		if !inStrSl(route.ServerNames, r.URL.Hostname()) {
@@ -221,8 +223,7 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 		}
 
 		// Find matching route
-		found := findMatchingLocation(r.URL.Path, route.Locations)
-		log.Debug(r.URL.Path, " -> ", found.Location)
+		found := findMatchingLocation(pathItems, route.Locations)
 		if found != nil {
 			return found
 		}
@@ -239,7 +240,7 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 
 func inStrSl(ss []string, str string) bool {
 	for _, s := range ss {
-		if strings.ToLower(str) == strings.ToLower(s) {
+		if str == strings.ToLower(s) {
 			return true
 		}
 	}

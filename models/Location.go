@@ -62,17 +62,15 @@ func singleJoiningSlash(a, b string) string {
 	return a + b
 }
 
-func findMatchingLocation(path string, locations []RouteLocation) *RouteLocation {
-	pathItems := trunSlice(strings.Split(path, "/"))
-
-	for i := range locations {
-		locationItems := trunSlice(strings.Split(locations[i].Location, "/"))
-
+func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteLocation {
+	for index := range locations {
+		locationItems := trunSlice(strings.Split(locations[index].Location, "/"))
 		// Calc match depth and compare to required depth. If >=, add to matching items
 		if calcMatchDepht(pathItems, locationItems) >= len(locationItems) {
-			return &locations[i]
+			return &locations[index]
 		}
 	}
+
 	return nil
 }
 
@@ -88,6 +86,7 @@ func calcMatchDepht(path, location []string) int {
 		}
 		matchCount++
 	}
+
 	return matchCount
 }
 
