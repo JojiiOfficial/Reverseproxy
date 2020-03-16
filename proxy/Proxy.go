@@ -3,11 +3,9 @@ package proxy
 import (
 	"errors"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
-	"github.com/JojiiOfficial/gaw"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -61,11 +59,8 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 // Proxy a request
 func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) (*http.Response, error) {
 	// Handle access control
-	if location.Deny == "all" {
-		ip := strings.Split(req.RemoteAddr, ":")[0]
-		if !gaw.IsInStringArray(ip, location.Allow) {
-			return getForbiddenResponse(req), nil
-		}
+	if !isRequestAllowed(req, location) {
+		return getForbiddenResponse(req), nil
 	}
 
 	// Modifies the request
