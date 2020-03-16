@@ -45,12 +45,6 @@ func (location RouteLocation) ModifyProxyRequest(req *http.Request) {
 	location.finalMods(req)
 }
 
-// ModifyRedirectRequest modifies a request to redirect
-func (location *RouteLocation) ModifyRedirectRequest(req *http.Request) {
-
-	location.finalMods(req)
-}
-
 func (location *RouteLocation) finalMods(req *http.Request) {
 	// explicitly disable User-Agent so it's not set to default value
 	if _, ok := req.Header["User-Agent"]; !ok {

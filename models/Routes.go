@@ -43,6 +43,13 @@ func CreateExampleRoute(file string) error {
 			AddressInterface{
 				Address: "127.0.0.1:80",
 				Task:    "httpredirect",
+				TaskData: TaskData{
+					Redirect: RedirectData{
+						Location: "https://127.0.0.1:443",
+						Body:     "Moved permanently",
+						HTTPCode: 301,
+					},
+				},
 			},
 			AddressInterface{
 				Address: "127.0.0.1:443",
