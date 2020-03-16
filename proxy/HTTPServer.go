@@ -13,6 +13,7 @@ import (
 // HTTPServer http server
 type HTTPServer struct {
 	SSL    bool
+	Debug  bool
 	Routes []*models.Route
 	Server *http.Server
 }
@@ -56,6 +57,10 @@ func (httpServer *HTTPServer) Director(req *http.Request) {
 
 	// Modifies the request
 	location.ModifyRequest(req)
+
+	if httpServer.Debug {
+		log.Info("Forwarding to", req.URL.String())
+	}
 
 	log.Info("Forwarding took ", time.Since(start).String())
 }

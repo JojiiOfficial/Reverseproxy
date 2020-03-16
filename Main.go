@@ -19,10 +19,12 @@ const (
 
 var (
 	configPath *string
+	debug      *bool
 )
 
 func initFlags() {
-	configPath = flag.String("config", "", "Specify the configfil")
+	configPath = flag.String("config", "", "Specify the configfile")
+	debug = flag.Bool("debug", false, "Debug")
 	flag.Parse()
 }
 
@@ -54,6 +56,7 @@ func main() {
 
 	// Create and start the reverseproxy server
 	server := proxy.NewReverseProxyServere(config, routes)
+	server.Debug = *debug
 	server.InitHTTPServers()
 	server.Start()
 

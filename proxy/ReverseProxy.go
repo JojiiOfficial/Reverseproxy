@@ -19,6 +19,7 @@ type ReverseProxyServer struct {
 	Config *models.Config
 	Routes []models.Route
 	Server []HTTPServer
+	Debug  bool
 }
 
 // NewReverseProxyServere create a new reverseproxy server
