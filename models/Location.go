@@ -54,12 +54,15 @@ func (location *RouteLocation) ModifyProxyRequest(req *http.Request) {
 		if len(location.DestinationURL.Path) > 1 && strings.HasPrefix(req.URL.Path[1:], location.DestinationURL.Path[1:]) {
 			// Remove prefix of requested path and join to destination path if a prefix exists
 			req.URL.Path = path.Join(location.DestinationURL.Path, (req.URL.Path[len(location.DestinationURL.Path):]))
-		} else {
-			// Just join both Paths
+		} else if trimPath(location.DestinationURL.Path) != trimPath(req.URL.Path) {
+			// Join paths if don't match
 			req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
 		}
 	} else {
-		req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
+		if trimPath(location.DestinationURL.Path) != trimPath(req.URL.Path) {
+			// Join paths if don't match
+			req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
+		}
 	}
 
 	targetQuery := location.DestinationURL.RawQuery
@@ -72,6 +75,10 @@ func (location *RouteLocation) ModifyProxyRequest(req *http.Request) {
 	}
 
 	location.finalMods(req)
+}
+
+func trimPath(p string) string {
+	return strings.Trim(p, "/")
 }
 
 func (location *RouteLocation) finalMods(req *http.Request) {
