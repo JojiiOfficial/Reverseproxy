@@ -11,15 +11,18 @@ import (
 
 // HTTPServer http server
 type HTTPServer struct {
-	SSL    bool
-	Debug  bool
-	Routes []*models.Route
-	Server *http.Server
-	Config *models.Config
+	SSL           bool
+	Debug         bool
+	ListenAddress *models.ListenAddress
+	Routes        []*models.Route
+	Server        *http.Server
+	Config        *models.Config
+	Loglevel      log.Level
 }
 
 // Start starts the server
 func (httpServer *HTTPServer) Start() {
+	httpServer.Loglevel = log.GetLevel()
 	httpServer.initRouter()
 	go httpServer.run()
 }

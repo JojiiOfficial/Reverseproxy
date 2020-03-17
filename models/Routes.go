@@ -165,8 +165,9 @@ func (route *Route) LoadAddress(config *Config) bool {
 		if address.Address == "" {
 			return false
 		}
+		address.Init()
 
-		addresses = append(addresses, config.GetAddress(iface))
+		addresses = append(addresses, address)
 	}
 
 	// Set addresses

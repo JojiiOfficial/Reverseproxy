@@ -21,11 +21,13 @@ type RouteLocation struct {
 	// Non toml attrs
 	DestinationURL *url.URL `toml:"-"`
 	Route          *Route   `toml:"-"`
+	HasDenyRoule   bool     `toml:"-"`
 }
 
-// Init inits a location
+// Init inits a location. Gets called on loading its assigned route
 func (location *RouteLocation) Init(route *Route) {
 	location.Route = route
+	location.HasDenyRoule = strings.ToLower(location.Deny) == "all"
 	location.DestinationURL, _ = url.Parse(location.Destination)
 }
 

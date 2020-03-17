@@ -12,9 +12,9 @@ import (
 // Return true if request is not denied by some rules or IP has access
 func isRequestAllowed(req *http.Request, location *models.RouteLocation) bool {
 	// if location ist denied by 'all' and no exception is specified, return 'not allowed'
-	if location.Deny == "all" && len(location.Allow) == 0 {
+	if location.HasDenyRoule && len(location.Allow) == 0 {
 		return false
-	} else if location.Deny == "all" {
+	} else if location.HasDenyRoule {
 		// To IP
 		sourceHost := req.RemoteAddr
 		// Use a custom header if specified
@@ -53,7 +53,7 @@ func isRequestAllowed(req *http.Request, location *models.RouteLocation) bool {
 			}
 		}
 
-		// Otherwise return false -> deny all
+		// Otherwise return 'deny all'
 		return false
 	}
 

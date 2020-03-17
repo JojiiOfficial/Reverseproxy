@@ -14,43 +14,36 @@ func (httpServer *HTTPServer) Director(req *http.Request) {}
 
 // RoundTrip trips stuff around
 func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, error) {
-	start := time.Now()
+	var start time.Time
+
+	if httpServer.Loglevel == log.DebugLevel {
+		start = time.Now()
+	}
 
 	// Set host of new request
-	req.URL.Host = req.Host
-
-	// Find matching location
-	location := models.FindMatchingLocation(httpServer.Routes, req)
-	if location == nil {
-		log.Warnf("No matching route found for %s", req.URL.String())
-		return nil, errors.New("Route not found")
-	}
-
-	// Get interface
-
-	rif := httpServer.Config.GetAddress(httpServer.Server.Addr)
-	if rif == nil {
-		return nil, errors.New("Interface not found")
-	}
-
 	var err error
 	taskResponse := &http.Response{}
+	req.URL.Host = req.Host
 
-	// Do specified task
-	switch rif.GetTask() {
-	case models.ProxyTask:
-		{
-			// Forward request
-			taskResponse, err = httpServer.proxyTask(req, location)
+	if httpServer.ListenAddress.IsRedirectInterface {
+		// Handle Redirection
+		taskResponse = httpServer.redirectTask(req, httpServer.ListenAddress)
+	} else {
+		// Handle proxy route
+		location := models.FindMatchingLocation(httpServer.Routes, req)
+		if location == nil {
+			log.Warnf("No matching route found for %s", req.URL.String())
+			return nil, errors.New("Route not found")
 		}
-	case models.HTTPRedirectTask:
-		{
-			// Send redirect
-			taskResponse, err = httpServer.redirectTask(req, rif), nil
-		}
+
+		taskResponse, err = httpServer.proxyTask(req, location)
 	}
 
-	log.Debug("Action took ", time.Since(start).String())
+	// Prevent useless operations
+	if httpServer.Loglevel == log.DebugLevel {
+		log.Debug("Action took ", time.Since(start).String())
+	}
+
 	return taskResponse, err
 }
 

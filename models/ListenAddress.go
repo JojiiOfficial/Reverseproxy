@@ -10,10 +10,11 @@ import (
 
 // ListenAddress config for ports
 type ListenAddress struct {
-	Address  string
-	SSL      bool
-	Task     InterfaceTask
-	TaskData TaskData
+	Address             string
+	SSL                 bool
+	Task                InterfaceTask
+	TaskData            TaskData
+	IsRedirectInterface bool `toml:"-"`
 }
 
 // TaskData data for interface Task
@@ -35,6 +36,11 @@ const (
 	HTTPRedirectTask InterfaceTask = "httpredirect"
 	ProxyTask        InterfaceTask = "proxy"
 )
+
+// Init inits a listenAddress
+func (address *ListenAddress) Init() {
+	address.IsRedirectInterface = (address.Task == HTTPRedirectTask)
+}
 
 // GetTask gets task from AddressInterface. If not set, return Default task
 func (address *ListenAddress) GetTask() InterfaceTask {

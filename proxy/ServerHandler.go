@@ -30,7 +30,7 @@ func NewReverseProxyServere(config *models.Config, routes []models.Route) *Rever
 	}
 }
 
-// InitHTTPServers inits http servers
+// InitHTTPServers inits all http servers
 func (server *ReverseProxyServer) InitHTTPServers() {
 	var foundRoutes int
 
@@ -75,11 +75,12 @@ func (server *ReverseProxyServer) InitHTTPServers() {
 		// Append server
 		routes := models.GetRoutesFromAddress(server.Routes, server.Config.ListenAddresses[i])
 		server.Server = append(server.Server, HTTPServer{
-			SSL:    listenAddress.SSL,
-			Server: &httpServer,
-			Routes: routes,
-			Debug:  server.Debug,
-			Config: server.Config,
+			SSL:           listenAddress.SSL,
+			Server:        &httpServer,
+			Routes:        routes,
+			Debug:         server.Debug,
+			Config:        server.Config,
+			ListenAddress: &server.Config.ListenAddresses[i],
 		})
 
 		foundRoutes += len(routes)
