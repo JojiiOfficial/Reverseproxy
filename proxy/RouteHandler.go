@@ -67,6 +67,7 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) (*http.Response, error) {
 	// Modifies the request
 	location.ModifyProxyRequest(req)
+	log.Debug("Destination: -> ", req.URL)
 
 	// Handle access control
 	if !isRequestAllowed(req, location) {

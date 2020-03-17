@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	"github.com/JojiiOfficial/ReverseProxy/proxy"
@@ -20,16 +21,21 @@ const (
 )
 
 var (
-	configPath *string
-	debug      *bool
+	configPath            *string
+	debug, forceColorLogs *bool
 )
 
 func initFlags() {
 	configPath = flag.String("config", "", "Specify the configfile")
 	debug = flag.Bool("debug", false, "Debug")
+	forceColorLogs = flag.Bool("force-colors", false, "Force colors")
 	flag.Parse()
 
 	*configPath = getEnvar("PROXY_CONFIG", *configPath)
+
+	if os.Getenv("PROXY_FORCE_COLORS") == "true" {
+		*forceColorLogs = true
+	}
 
 	if os.Getenv("PROXY_DEBUG") == "true" {
 		*debug = true
@@ -38,6 +44,12 @@ func initFlags() {
 
 func main() {
 	initFlags()
+
+	log.SetOutput(os.Stdout)
+	if *forceColorLogs {
+		setupForceColor()
+		logrus.Info("Force Colors: on")
+	}
 
 	if *debug {
 		logrus.SetLevel(logrus.DebugLevel)
@@ -86,4 +98,13 @@ func getEnvar(key, fallbackValue string) string {
 		return va
 	}
 	return fallbackValue
+}
+
+func setupForceColor() {
+	log.SetFormatter(&log.TextFormatter{
+		DisableTimestamp: false,
+		TimestampFormat:  time.Stamp,
+		FullTimestamp:    true,
+		ForceColors:      true,
+	})
 }
