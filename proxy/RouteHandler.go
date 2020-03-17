@@ -35,7 +35,6 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 			log.Warnf("No matching route found for %s", req.URL.String())
 			return nil, errors.New("Route not found")
 		}
-
 		taskResponse, err = httpServer.proxyTask(req, location)
 	}
 

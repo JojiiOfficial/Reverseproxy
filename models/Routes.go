@@ -230,15 +230,16 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 
 		// Find matching route
 		found := findMatchingLocation(pathItems, route.Locations)
-		log.Debug(r.URL.String(), " -> ", found.DestinationURL.String())
 
 		if found != nil {
+			log.Debug(r.URL.String(), " -> ", found.DestinationURL.String())
 			found.Route = route
 			return found
 		}
 
 		// Otherwise use default location
 		if route.DefaultLocation != nil {
+			log.Debug(r.URL.String(), " -> ", route.DefaultLocation.DestinationURL.String())
 			return route.DefaultLocation
 		}
 	}

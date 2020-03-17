@@ -48,7 +48,6 @@ func (address *ListenAddress) GetTask() InterfaceTask {
 	if string(address.Task) == "" {
 		return ProxyTask
 	}
-
 	return address.Task
 }
 

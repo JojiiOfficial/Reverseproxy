@@ -3,6 +3,7 @@ package models
 import (
 	"net/http"
 	"net/url"
+	"path"
 	"strings"
 )
 
@@ -41,23 +42,24 @@ func (location *RouteLocation) Ports() []string {
 }
 
 // ModifyProxyRequest modifies a request to a proxy forward request
-func (location RouteLocation) ModifyProxyRequest(req *http.Request) {
-	target := location.DestinationURL
+func (location *RouteLocation) ModifyProxyRequest(req *http.Request) {
+	// Set new host & scheme
+	req.URL.Scheme = location.DestinationURL.Scheme
+	req.URL.Host = location.DestinationURL.Host
 
-	targetQuery := target.RawQuery
-	req.URL.Scheme = target.Scheme
-	req.URL.Host = target.Host
-
-	// Only join file name if location.Location ends with a /
-	if strings.HasSuffix(target.Path, "/") {
-		req.URL.Path = singleJoiningSlash(target.Path, req.URL.Path)
+	// Build Path
+	if strings.HasSuffix(location.DestinationURL.Path, "/") {
+		req.URL.Path = path.Join(location.DestinationURL.Path, (req.URL.Path[len(location.Location):]))
 	} else {
-		req.URL.Path = target.Path
+		req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
 	}
 
+	targetQuery := location.DestinationURL.RawQuery
 	if targetQuery == "" || req.URL.RawQuery == "" {
+		// Add Query
 		req.URL.RawQuery = targetQuery + req.URL.RawQuery
 	} else {
+		// Add locations custom-query if set
 		req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 	}
 
@@ -71,24 +73,15 @@ func (location *RouteLocation) finalMods(req *http.Request) {
 	}
 }
 
-func singleJoiningSlash(a, b string) string {
-	if strings.HasPrefix(b, a) {
-		b = b[len(a)-1:]
-	}
-	aslash := strings.HasSuffix(a, "/")
-	bslash := strings.HasPrefix(b, "/")
-	switch {
-	case aslash && bslash:
-		return a + b[1:]
-	case !aslash && !bslash:
-		return a + "/" + b
-	}
-	return a + b
-}
-
 func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteLocation {
 	for index := range locations {
 		locationItems := trunSlice(strings.Split(locations[index].Location, "/"))
+
+		// Try to find anything else than /
+		if len(locationItems) == 0 {
+			continue
+		}
+
 		// Calc match depth and compare to required depth. If >=, add to matching items
 		if calcMatchDepth(pathItems, locationItems, locations[index].Regex) >= len(locationItems) {
 			return &locations[index]
