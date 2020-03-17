@@ -5,6 +5,8 @@ import (
 	"net/url"
 	"path"
 	"strings"
+
+	"github.com/JojiiOfficial/gaw"
 )
 
 // RouteLocation location for route
@@ -75,7 +77,7 @@ func (location *RouteLocation) finalMods(req *http.Request) {
 
 func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteLocation {
 	for index := range locations {
-		locationItems := trunSlice(strings.Split(locations[index].Location, "/"))
+		locationItems := gaw.TrimEmptySlice(strings.Split(locations[index].Location, "/"))
 
 		// Try to find anything else than /
 		if len(locationItems) == 0 {
@@ -121,15 +123,4 @@ func calcMatchDepth(path, location []string, regex bool) int {
 
 func isRegexString(str string) bool {
 	return strings.HasSuffix(str, "}") && strings.HasPrefix(str, "{")
-}
-
-func trunSlice(sl []string) []string {
-	j := 0
-	for i := range sl {
-		if sl[i] != "" {
-			sl[j] = sl[i]
-			j++
-		}
-	}
-	return sl[:j]
 }

@@ -3,6 +3,7 @@ package proxy
 import (
 	"errors"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
@@ -21,13 +22,18 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 	}
 
 	// Set host of new request
-	var err error
-	taskResponse := &http.Response{}
 	req.URL.Host = req.Host
+	var err error
+	taskResponse := new(http.Response)
+	wg := new(sync.WaitGroup)
 
 	if httpServer.ListenAddress.IsRedirectInterface {
 		// Handle Redirection
-		taskResponse = httpServer.redirectTask(req, httpServer.ListenAddress)
+		wg.Add(1)
+		go (func() {
+			taskResponse = httpServer.redirectTask(req, httpServer.ListenAddress)
+			wg.Done()
+		})()
 	} else {
 		// Handle proxy route
 		location := models.FindMatchingLocation(httpServer.Routes, req)
@@ -35,13 +41,22 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 			log.Warnf("No matching route found for %s", req.URL.String())
 			return nil, errors.New("Route not found")
 		}
-		taskResponse, err = httpServer.proxyTask(req, location)
+
+		// Do response
+		wg.Add(1)
+		go (func() {
+			taskResponse, err = httpServer.proxyTask(req, location)
+			wg.Done()
+		})()
 	}
 
 	// Prevent useless operations
 	if httpServer.Loglevel == log.DebugLevel {
+		// Print stats
 		log.Debug("Action took ", time.Since(start).String())
 	}
+
+	wg.Wait()
 
 	return taskResponse, err
 }
@@ -50,14 +65,14 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 
 // Proxy a request
 func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) (*http.Response, error) {
+	// Modifies the request
+	location.ModifyProxyRequest(req)
+
 	// Handle access control
 	if !isRequestAllowed(req, location) {
 		log.Debugf("IP %s is not allowed", req.RemoteAddr)
 		return getForbiddenResponse(req), nil
 	}
-
-	// Modifies the request
-	location.ModifyProxyRequest(req)
 
 	// Call default roundTrip to forward the request
 	return http.DefaultTransport.RoundTrip(req)

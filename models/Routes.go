@@ -175,7 +175,7 @@ func (route *Route) LoadAddress(config *Config) bool {
 	return true
 }
 
-//GetTLSCerts get all required certifitates/keys from routes
+//GetTLSCerts get all required certifitates/keys from routes which are assigned to the given address
 func GetTLSCerts(routes []Route, address *ListenAddress) []TLSKeyCertPair {
 	var pairs []TLSKeyCertPair
 
@@ -220,7 +220,7 @@ func (route Route) HasAddress(address ListenAddress) bool {
 
 // FindMatchingLocation finds location
 func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
-	pathItems := trunSlice(strings.Split(r.URL.Path, "/"))
+	pathItems := gaw.TrimEmptySlice(strings.Split(r.URL.Path, "/"))
 
 	for _, route := range routes {
 		// Match hostname
@@ -230,16 +230,15 @@ func FindMatchingLocation(routes []*Route, r *http.Request) *RouteLocation {
 
 		// Find matching route
 		found := findMatchingLocation(pathItems, route.Locations)
-
 		if found != nil {
-			log.Debug(r.URL.String(), " -> ", found.DestinationURL.String())
+			log.Debug(r.URL, " -> ", found.DestinationURL)
 			found.Route = route
 			return found
 		}
 
 		// Otherwise use default location
 		if route.DefaultLocation != nil {
-			log.Debug(r.URL.String(), " -> ", route.DefaultLocation.DestinationURL.String())
+			log.Debug(r.URL, " -> ", route.DefaultLocation.DestinationURL)
 			return route.DefaultLocation
 		}
 	}
