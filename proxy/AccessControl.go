@@ -16,7 +16,19 @@ func isRequestAllowed(req *http.Request, location *models.RouteLocation) bool {
 		return false
 	} else if location.Deny == "all" {
 		// To IP
-		sIP := strings.Split(req.RemoteAddr, ":")[0]
+		sourceHost := req.RemoteAddr
+		// Use a custom header if specified
+		if len(location.SrcIPHeader) > 0 {
+			sourceHost = req.Header.Get(location.SrcIPHeader)
+			// If header is empty, warn and return 'not allowed'
+			if len(sourceHost) == 0 {
+				log.Warn("SrcIPHeader is empty!")
+				return false
+			}
+		}
+
+		// Remove port and parse to net.IP
+		sIP := strings.Split(sourceHost, ":")[0]
 		ip := net.ParseIP(sIP)
 
 		// Loop allowed IPs

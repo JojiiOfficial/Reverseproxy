@@ -60,6 +60,7 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 func (httpServer *HTTPServer) proxyTask(req *http.Request, location *models.RouteLocation) (*http.Response, error) {
 	// Handle access control
 	if !isRequestAllowed(req, location) {
+		log.Debugf("IP %s is not allowed", req.RemoteAddr)
 		return getForbiddenResponse(req), nil
 	}
 

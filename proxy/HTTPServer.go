@@ -34,7 +34,7 @@ func (httpServer *HTTPServer) initRouter() {
 // Start the server
 func (httpServer *HTTPServer) run() {
 	if httpServer.SSL {
-		log.Debugf("Starting HTTPS server on '%s' with %d certificates and %d routes\n",
+		log.Debugf("Starting HTTPS server on '%s' with %d certificates and %d routes",
 			httpServer.Server.Addr,
 			len(httpServer.Server.TLSConfig.Certificates),
 			len(httpServer.Routes),
@@ -49,7 +49,7 @@ func (httpServer *HTTPServer) run() {
 		// Start the server
 		log.Fatal(httpServer.Server.Serve(listener))
 	} else {
-		log.Debugf("Starting HTTP server on '%s' with %d routes\n",
+		log.Debugf("Starting HTTP server on '%s' with %d routes",
 			httpServer.Server.Addr,
 			len(httpServer.Routes),
 		)

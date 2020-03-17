@@ -11,6 +11,7 @@ type RouteLocation struct {
 	// Toml config attributes
 	Location    string
 	Destination string
+	SrcIPHeader string
 	Regex       bool
 
 	// Allow/deny hosts
