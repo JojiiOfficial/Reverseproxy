@@ -6,15 +6,15 @@ You can compile the binary by using `go build -o main`. This will create a file 
 You can set `-debug` and `-config` if you want to view more output or specify a custom config file. By default the config file is stored at /etc/reverseproxy/config.toml
 
 ### Docker
-The images are hosted at [Dockerhub](https://hub.docker.com/r/jojii/reverseproxy)
-To Install run following command (you can/should adjust the volume path)
+The images are hosted at [Dockerhub](https://hub.docker.com/r/jojii/reverseproxy).<br>
+To Install it, run following command
 ```bash
 docker run --name revproxy --rm -v `pwd`/config:/app/config jojii/reverseproxy
 ```
 
 ## Concept/Idea
 - You have one configfile in which you have to define your routefiles and interfaces
-- You can have nroutes stored in separate files in the `./config/routes` directory
+- You can have n routes stored in separate files in the `./config/routes` directory
 - One route represents one (sub)domain/host
 - One route can listen on n ports/interfaces which you have to specify in the config first
 - Http redirect interfaces can't be used as interface for locations
@@ -26,7 +26,7 @@ Config.toml:
 # Specify your routes
 RouteFiles = ["./config/routes/route1.toml"]
 [Server]
-  MaxHeaderSize = "16KB"
+  MaxHeaderSize = "16KB" # B/KB/MB/GB/TB/PB/EB
   ReadTimeout = "10s"
   WriteTimeout = "10s"
   
