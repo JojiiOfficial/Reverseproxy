@@ -171,6 +171,16 @@ func (config *Config) LoadRoutes() ([]Route, error) {
 	return routes, nil
 }
 
+// GetPreferredSSLAddress returns preferred SSL address
+func (config Config) GetPreferredSSLAddress() *ListenAddress {
+	for i := range config.ListenAddresses {
+		if config.ListenAddresses[i].SSL == true {
+			return &config.ListenAddresses[i]
+		}
+	}
+	return nil
+}
+
 // GetAddress gets address from config
 func (config Config) GetAddress(sAddress string) *ListenAddress {
 	for i, address := range config.ListenAddresses {

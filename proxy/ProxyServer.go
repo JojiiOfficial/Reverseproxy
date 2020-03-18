@@ -29,8 +29,9 @@ func (httpServer *HTTPServer) Start() {
 
 func (httpServer *HTTPServer) initRouter() {
 	httpServer.Server.Handler = &httputil.ReverseProxy{
-		Director:  httpServer.Director,
-		Transport: httpServer,
+		Director:       httpServer.Director,
+		Transport:      httpServer,
+		ModifyResponse: httpServer.ModifyResponse,
 	}
 }
 

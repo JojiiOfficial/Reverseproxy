@@ -3,12 +3,43 @@ package proxy
 import (
 	"errors"
 	"net/http"
-	"sync"
+	"net/url"
 	"time"
 
 	"github.com/JojiiOfficial/ReverseProxy/models"
 	log "github.com/sirupsen/logrus"
 )
+
+// ModifyResponse modifies the response from redirected request to client
+func (httpServer *HTTPServer) ModifyResponse(r *http.Response) error {
+	// Change Moved permanently locations to SSL
+	location, ok := r.Header["Location"]
+	if ok && len(location) > 0 && r.StatusCode == http.StatusMovedPermanently {
+		u, err := url.Parse(location[0])
+		if err != nil {
+			return err
+		}
+
+		// Only change Location header if location is assigned to the server
+		if route := models.GetRouteForHost(httpServer.Routes, u.Hostname()); route != nil {
+			// Upgrade to https location
+			if u.Scheme == "http" {
+				u.Scheme = "https"
+
+				// Change port
+				sslPort := httpServer.Config.GetPreferredSSLAddress()
+				if u.Port() != sslPort.GetPort() {
+					u.Host = u.Hostname() + ":" + sslPort.GetPort()
+				}
+			}
+
+			// Set new header
+			r.Header.Set("Location", u.String())
+		}
+	}
+
+	return nil
+}
 
 // Director directs
 func (httpServer *HTTPServer) Director(req *http.Request) {}
@@ -25,15 +56,10 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 	req.URL.Host = req.Host
 	var err error
 	taskResponse := new(http.Response)
-	wg := new(sync.WaitGroup)
 
 	if httpServer.ListenAddress.IsRedirectInterface {
 		// Handle Redirection
-		wg.Add(1)
-		go (func() {
-			taskResponse = httpServer.redirectTask(req, httpServer.ListenAddress)
-			wg.Done()
-		})()
+		taskResponse = httpServer.redirectTask(req, httpServer.ListenAddress)
 	} else {
 		// Handle proxy route
 		location := models.FindMatchingLocation(httpServer.Routes, req)
@@ -43,11 +69,7 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 		}
 
 		// Do response
-		wg.Add(1)
-		go (func() {
-			taskResponse, err = httpServer.proxyTask(req, location)
-			wg.Done()
-		})()
+		taskResponse, err = httpServer.proxyTask(req, location)
 	}
 
 	// Prevent useless operations
@@ -55,8 +77,6 @@ func (httpServer *HTTPServer) RoundTrip(req *http.Request) (*http.Response, erro
 		// Print stats
 		log.Debug("Action took ", time.Since(start).String())
 	}
-
-	wg.Wait()
 
 	return taskResponse, err
 }

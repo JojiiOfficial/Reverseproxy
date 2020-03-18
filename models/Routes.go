@@ -256,6 +256,27 @@ func inStrSl(ss []string, str string) bool {
 	return false
 }
 
+// GetRouteForHost returns route by host (servername or route)
+func GetRouteForHost(routes []*Route, host string) *Route {
+	// Search in servernames
+	for i := range routes {
+		if gaw.IsInStringArray(host, routes[i].ServerNames) {
+			return routes[i]
+		}
+	}
+
+	// Search in locations
+	for i := range routes {
+		for _, l := range routes[i].Locations {
+			if l.DestinationURL.Hostname() == host {
+				return routes[i]
+			}
+		}
+	}
+
+	return nil
+}
+
 // Return true if given address belongs to host adresses
 func isHostsAddress(address string) bool {
 	if gaw.IsInStringArray(address, []string{"[::1]", "127.0.0.1"}) {

@@ -3,7 +3,6 @@ package models
 import (
 	"net/http"
 	"net/url"
-	"path"
 	"strings"
 
 	"github.com/JojiiOfficial/gaw"
@@ -44,33 +43,34 @@ func (location *RouteLocation) Ports() []string {
 }
 
 // ModifyProxyRequest modifies a request to a proxy forward request
-func (location *RouteLocation) ModifyProxyRequest(req *http.Request) {
-	// Set new host & scheme
-	req.URL.Scheme = location.DestinationURL.Scheme
-	req.URL.Host = location.DestinationURL.Host
+func (location RouteLocation) ModifyProxyRequest(req *http.Request) {
+	destination := location.DestinationURL
 
-	// Build Path
-	if strings.HasSuffix(location.DestinationURL.Path, "/") {
-		if len(location.DestinationURL.Path) > 1 && strings.HasPrefix(req.URL.Path[1:], location.DestinationURL.Path[1:]) {
-			// Remove prefix of requested path and join to destination path if a prefix exists
-			req.URL.Path = path.Join(location.DestinationURL.Path, (req.URL.Path[len(location.DestinationURL.Path):]))
-		} else if trimPath(location.DestinationURL.Path) != trimPath(req.URL.Path) {
-			// Join paths if don't match
-			req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
+	targetQuery := destination.RawQuery
+	req.URL.Scheme = destination.Scheme
+	req.URL.Host = destination.Host
+
+	// Only join file name if location.Location ends with a /
+	if strings.HasSuffix(destination.Path, "/") {
+		// Remove the the target url prefix from the request url
+		if len(destination.Path) > 1 && len(req.URL.Path) > 1 && strings.HasPrefix(req.URL.Path[1:], destination.Path[1:]) {
+			req.URL.Path = req.URL.Path[len(destination.Path)-1:]
+		}
+
+		// Append path if both aren't the same
+		if trimPath(destination.Path) != trimPath(req.URL.Path) {
+			req.URL.Path = singleJoiningSlash(destination.Path, req.URL.Path)
 		}
 	} else {
-		if trimPath(location.DestinationURL.Path) != trimPath(req.URL.Path) {
-			// Join paths if don't match
-			req.URL.Path = path.Join(location.DestinationURL.Path, req.URL.Path)
-		}
+		req.URL.Path = destination.Path
 	}
 
-	targetQuery := location.DestinationURL.RawQuery
+	// Append HTTP queries of target and request
+	// This allows to add custom queries into locations which will be joined
+	// with the requested query
 	if targetQuery == "" || req.URL.RawQuery == "" {
-		// Add Query
 		req.URL.RawQuery = targetQuery + req.URL.RawQuery
 	} else {
-		// Add locations custom-query if set
 		req.URL.RawQuery = targetQuery + "&" + req.URL.RawQuery
 	}
 
@@ -86,6 +86,18 @@ func (location *RouteLocation) finalMods(req *http.Request) {
 	if _, ok := req.Header["User-Agent"]; !ok {
 		req.Header.Set("User-Agent", "")
 	}
+}
+
+func singleJoiningSlash(a, b string) string {
+	aslash := strings.HasSuffix(a, "/")
+	bslash := strings.HasPrefix(b, "/")
+	switch {
+	case aslash && bslash:
+		return a + b[1:]
+	case !aslash && !bslash:
+		return a + "/" + b
+	}
+	return a + b
 }
 
 func findMatchingLocation(pathItems []string, locations []RouteLocation) *RouteLocation {
