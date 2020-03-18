@@ -3,7 +3,6 @@ config
 data
 routes
 *.toml
-*.yaml
 *.yml
 *.json
 certs

@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: reverseproxy-certs
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "<your Cert path>"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reverseproxy-storage-claim
+spec:
+  storageClassName: manual
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20i

@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: reverseproxy
+  name: reverseproxy
+  namespace: default
+spec:
+  replicas: 3
+  revisionHistoryLimit: 1
+  selector:
+    matchLabels:
+      app: reverseproxy
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: reverseproxy
+    spec:
+      containers:
+      - image: jojii/reverseproxy:v1.6
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: PROXY_DEBUG
+          value: "true"
+        - name: PROXY_CONFIG
+          value: /app/config/config.toml
+        name: reverseproxy
+        volumeMounts:
+        - mountPath: /app/config
+          name: config
+        - mountPath: /app/config/routes/
+          name: proxyroutes
+        - mountPath: /app/certs/
+          name: certs
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          name: proxyconfig
+        name: config
+      - configMap:
+          name: proxyroutes
+        name: proxyroutes
+      - name: certs
+        persistentVolumeClaim:
+          claimName: reverseproxy-storage-claim
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    app: reverseproxy
+  name: reverseproxy
+spec:
+  externalIPs:
+  - "< your external IP >"
+  ports:
+  - name: 80-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  - name: 443-443
+    port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    app: reverseproxy
+  type: LoadBalancer
